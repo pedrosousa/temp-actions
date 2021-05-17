@@ -3,4 +3,4 @@
 [env.preview]
 name = "pr[PRNUMBER]"
 workers_dev = true
-account_id = "09e1897acd19314fc6df7d21108729b0"
+account_id = "[PREVIEWACCOUNTID]"

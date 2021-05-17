@@ -1,5 +1,8 @@
 name: Deploy preview
 
+env:
+  PREVIEW_ACCOUNT_ID: 09e1897acd19314fc6df7d21108729b0
+
 on:
   pull_request:
     branches:
@@ -14,8 +17,6 @@ jobs:
       result: ${{ steps.step1.outputs.result }}
     runs-on: ubuntu-latest
     steps:
-      # debug action -- REMOVE LATER
-      - uses: hmarr/debug-action@v2
       - name: Set env variable to true when label is present
         id: step1
         if: ${{ contains( github.event.pull_request.labels.*.name, 'preview' ) }}
@@ -54,21 +55,23 @@ jobs:
           node-version: 14.2.0
       - name: Build docs
         run: |
-          cat ../../.github/preview_settings.toml >> wrangler.toml
-          sed 's#\[PRNUMBER\]#${{github.event.number}}#' -i wrangler.toml
-          cat wrangler.toml
-          npm install
-          mkdir .docs
-          npm run ghactionsbootstrap
-          npm run build
+          echo Placeholder
+          # npm install
+          # mkdir .docs
+          # npm run ghactionsbootstrap
+          # npm run build
         env:
           WORKERS_ENV: development
-      - name: Publish preview
-        uses: cloudflare/wrangler-action@1.2.0
-        with:
-          apiToken: ${{ secrets.CF_API_TOKEN }}
-          workingDirectory: "products/rules"
-          environment: "preview"
+      - name: Set up preview config
+        run: |
+          # chmod o+x ../../.github/setup_preview.sh
+          ../../.github/setup_preview.sh ${{ github.event.number }} {{ env.PREVIEW_ACCOUNT_ID }}
+      #- name: Publish preview
+      #  uses: cloudflare/wrangler-action@1.2.0
+      #  with:
+      #    apiToken: ${{ secrets.CF_API_TOKEN }}
+      #    workingDirectory: "products/rules"
+      #    environment: "preview"
 
 #  add-comment:
 #    needs: preview
