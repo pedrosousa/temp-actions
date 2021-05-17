@@ -8,23 +8,21 @@ on:
     types: [labeled, opened, synchronize]
 
 jobs:
-
-  preview-label:
+  preview:
     name: "Check for preview label"
+    outputs:
+      result: ${{ steps.step1.outputs.result }}
     runs-on: ubuntu-latest
     steps:
-      - name: Set default value for env variable
-        id: step1
-        run: echo "PREVIEW=false" >> $GITHUB_ENV
       - name: Set env variable to true when label is present
-        id: step2
+        id: step1
         if: ${{ contains( github.event.pull_request.labels.*.name, 'preview' ) }}
-        run: echo "PREVIEW=true" >> $GITHUB_ENV
+        run: echo "::set-output name=result::true"
 
   changes:
     name: "Check for docs changes"
-    needs: preview-label
-    if: ${{ env.PREVIEW == 'true' }}
+    needs: preview
+    if: ${{ needs.preview.outputs.result == 'true' }}
     runs-on: ubuntu-latest
     outputs:
       rules: ${{ steps.filter.outputs.rules }}
@@ -37,11 +35,10 @@ jobs:
             rules:
               - 'products/rules/**'
 
-
   deploy-rules:
     runs-on: ubuntu-latest
-    needs: changes
-    if: ${{ env.PREVIEW == 'true' && needs.changes.outputs.rules == 'true' }}
+    needs: [preview, changes]
+    if: ${{ needs.preview.outputs.result == 'true' && needs.changes.outputs.rules == 'true' }}
     defaults:
       run:
         shell: bash
@@ -73,7 +70,8 @@ jobs:
 #          environment: "preview"
 
 #  add-comment:
-#    if: ${{ env.PREVIEW == 'true' }}
+#    needs: preview
+#    if: ${{ needs.preview.outputs.result == 'true' }}
 #    runs-on: ubuntu-latest
 #    permissions:
 #      issues: write
