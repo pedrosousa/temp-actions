@@ -4,7 +4,7 @@ order: 1
 
 # Welcome
 
-With Rules, you can manage the following types of rules:
+With Rules you can manage the following types of rules:
 
 * **Page Rules** - Allow you to control which Cloudflare settings trigger on a given URL. Learn about Page Rules in the [Support KB](https://support.cloudflare.com/hc/articles/218411427).
 
