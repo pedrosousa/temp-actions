@@ -63,12 +63,12 @@ jobs:
           npm run build
         env:
           WORKERS_ENV: development
-#      - name: Publish preview
-#        uses: cloudflare/wrangler-action@1.2.0
-#        with:
-#          apiToken: ${{ secrets.CF_API_TOKEN }}
-#          workingDirectory: "products/rules"
-#          environment: "preview"
+      - name: Publish preview
+        uses: cloudflare/wrangler-action@1.2.0
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          workingDirectory: "products/rules"
+          environment: "preview"
 
 #  add-comment:
 #    needs: preview
