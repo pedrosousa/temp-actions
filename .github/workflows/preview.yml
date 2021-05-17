@@ -65,7 +65,9 @@ jobs:
       - name: Set up preview config
         run: |
           # chmod o+x ../../.github/setup_preview.sh
-          ../../.github/setup_preview.sh ${{ github.event.number }} {{ env.PREVIEW_ACCOUNT_ID }}
+          ../../.github/setup_preview.sh ${{ github.event.number }} $PREVIEW_ACCOUNT_ID
+        env:
+          PREVIEW_ACCOUNT_ID: {{ env.PREVIEW_ACCOUNT_ID }}
       #- name: Publish preview
       #  uses: cloudflare/wrangler-action@1.2.0
       #  with:
