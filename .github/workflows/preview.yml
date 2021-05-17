@@ -24,7 +24,7 @@ jobs:
   changes:
     name: "Check for docs changes"
     needs: preview-label
-    if: env.PREVIEW == 'true'
+    if: ${{ env.PREVIEW == 'true' }}
     runs-on: ubuntu-latest
     outputs:
       rules: ${{ steps.filter.outputs.rules }}
@@ -41,7 +41,7 @@ jobs:
   deploy-rules:
     runs-on: ubuntu-latest
     needs: changes
-    if: env.PREVIEW == 'true' && ${{ needs.changes.outputs.rules == 'true' }}
+    if: ${{ env.PREVIEW == 'true' && needs.changes.outputs.rules == 'true' }}
     defaults:
       run:
         shell: bash
@@ -73,7 +73,7 @@ jobs:
 #          environment: "preview"
 
 #  add-comment:
-#    if: env.PREVIEW == 'true'
+#    if: ${{ env.PREVIEW == 'true' }}
 #    runs-on: ubuntu-latest
 #    permissions:
 #      issues: write
