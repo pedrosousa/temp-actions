@@ -60,7 +60,7 @@ jobs:
           echo npm run build
           cat ../../.github/preview_settings.toml >> wrangler.toml
           cat wrangler.toml
-          sed 's#\[PRNUMBER\]#${{github.event.issue.number}}#' -i wrangler.toml
+          sed 's#\[PRNUMBER\]#${{github.event.number}}#' -i wrangler.toml
           cat wrangler.toml
         env:
           WORKERS_ENV: development
