@@ -1,0 +1,86 @@
+name: Deploy preview
+
+on:
+  pull_request:
+    branches-ignore:
+      - production
+      - main
+    types: [labeled, opened, synchronize]
+
+jobs:
+
+  preview-label:
+    name: "Check for preview label"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set default value for env variable
+        id: step1
+        run: echo "PREVIEW=false" >> $GITHUB_ENV
+      - name: Set env variable to true when label is present
+        id: step2
+        if: ${{ contains( github.event.pull_request.labels.*.name, 'preview' ) }}
+        run: echo "PREVIEW=true" >> $GITHUB_ENV
+
+  changes:
+    name: "Check for docs changes"
+    needs: preview-label
+    if: env.PREVIEW == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      rules: ${{ steps.filter.outputs.rules }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: dorny/paths-filter@v2.4.2
+        id: filter
+        with:
+          filters: |
+            rules:
+              - 'products/rules/**'
+
+
+  deploy-rules:
+    runs-on: ubuntu-latest
+    needs: changes
+    if: env.PREVIEW == 'true' && ${{ needs.changes.outputs.rules == 'true' }}
+    defaults:
+      run:
+        shell: bash
+        working-directory: products/rules
+    steps:
+      - name: Checkout docs
+        uses: actions/checkout@v2
+#      - name: Setup NodeJS
+#        uses: actions/setup-node@v1
+#        with:
+#          node-version: 14.2.0
+      - name: Build docs
+        run: |
+          echo npm install
+          echo mkdir .docs
+          echo npm run ghactionsbootstrap
+          echo npm run build
+          cat ../../.github/preview_settings.toml >> wrangler.toml
+          cat wrangler.toml
+          sed 's#\[PRNUMBER\]#${{github.event.issue.number}}#' -i wrangler.toml
+          cat wrangler.toml
+        env:
+          WORKERS_ENV: development
+#      - name: Publish staging
+#        uses: cloudflare/wrangler-action@1.2.0
+#        with:
+#          apiToken: ${{ secrets.CF_API_TOKEN }}
+#          workingDirectory: "products/rules"
+#          environment: "preview"
+
+#  add-comment:
+#    if: env.PREVIEW == 'true'
+#    runs-on: ubuntu-latest
+#    permissions:
+#      issues: write
+#    steps:
+#      - name: Add comment
+#        uses: peter-evans/create-or-update-comment@v1
+#        with:
+#          issue-number: ${{ github.event.issue.number }}
+#          body: |
+#            This issue is available for anyone to work on. **Make sure to reference this issue in your pull request.** :sparkles: Thank you for your contribution! :sparkles:
