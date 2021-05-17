@@ -14,6 +14,8 @@ jobs:
       result: ${{ steps.step1.outputs.result }}
     runs-on: ubuntu-latest
     steps:
+      # debug action -- REMOVE LATER
+      - uses: hmarr/debug-action@v2
       - name: Set env variable to true when label is present
         id: step1
         if: ${{ contains( github.event.pull_request.labels.*.name, 'preview' ) }}
