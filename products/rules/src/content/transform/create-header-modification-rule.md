@@ -6,9 +6,7 @@ order: 2
 # Create an HTTP Request Header Modification Rule in the dashboard
 
 <Aside type="note">
-
 This feature is available in Beta.
-
 </Aside>
 
 Create HTTP Request Header Modification Rules in the **Transform Rules** tab under Rules. See [Common use cases](/transform/use-cases#http-request-header-modification-examples) for example rule definitions.
