@@ -1,4 +1,4 @@
-name: Deploy preview
+name: Preview (old)
 
 env:
   PREVIEW_ACCOUNT_ID: 09e1897acd19314fc6df7d21108729b0
@@ -55,11 +55,11 @@ jobs:
           node-version: 14.2.0
       - name: Build docs
         run: |
-          #echo Placeholder
-          npm install
-          mkdir .docs
-          npm run ghactionsbootstrap
-          npm run build
+          echo Placeholder
+          #npm install
+          #mkdir .docs
+          #npm run ghactionsbootstrap
+          #npm run build
         env:
           WORKERS_ENV: development
       - name: Set up preview config
@@ -67,12 +67,12 @@ jobs:
           ../../.github/setup_preview.sh ${{ github.event.number }} $PREVIEW_ACCOUNT_ID
         env:
           PREVIEW_ACCOUNT_ID: ${{ env.PREVIEW_ACCOUNT_ID }}
-      - name: Publish preview
-        uses: cloudflare/wrangler-action@1.2.0
-        with:
-          apiToken: ${{ secrets.CF_API_TOKEN }}
-          workingDirectory: "products/rules"
-          environment: "preview"
+      # - name: Publish preview
+      #   uses: cloudflare/wrangler-action@1.2.0
+      #   with:
+      #     apiToken: ${{ secrets.CF_API_TOKEN }}
+      #     workingDirectory: "products/rules"
+      #     environment: "preview"
 
 #  add-comment:
 #    needs: preview
