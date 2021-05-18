@@ -19,9 +19,9 @@ There are two types of Transform Rules:
 To configure Transform Rules in the dashboard, use the **Transform Rules** tab in Rules.
 
 <ButtonGroup>
-  <Button type="primary" href="/transform/create-url-rewrite-rule">Create a URL Rewrite Rule</Button>
-  <Button type="primary" href="/transform/create-header-modification-rule">Create a Header Modification Rule</Button>
-  <Button type="secondary" href="/transform/use-cases">Examples</Button>
+<Button type="primary" href="/transform/create-url-rewrite-rule">Create a URL Rewrite Rule</Button>
+<Button type="primary" href="/transform/create-header-modification-rule">Create a Header Modification Rule</Button>
+<Button type="secondary" href="/transform/use-cases">Examples</Button>
 </ButtonGroup>
 
 ---
