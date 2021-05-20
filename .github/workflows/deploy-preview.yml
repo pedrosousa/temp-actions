@@ -21,7 +21,6 @@ jobs:
       - name: Download artifact
         uses: dawidd6/action-download-artifact@v2
         with:
-          repo: cloudflare/cloudflare-docs
           run_id: ${{github.event.workflow_run.id }}
           name: pr
           workflow: unused-but-mandatory-argument
@@ -72,17 +71,17 @@ jobs:
           while read tile; do
             echo "Building $tile..."
             if [ $tile == "developers.cloudflare.com" ]; then
-              echo pushd developers.cloudflare.com
+              pushd developers.cloudflare.com
               echo npm install
               echo npm run build
-              echo popd
+              popd
             else
-              echo pushd products/$tile
+              pushd products/$tile
               echo npm install
               echo mkdir .docs
               echo npm run ghactionsbootstrap
               echo npm run build
-              echo popd
+              popd
             fi
           done <./CHANGES
         env:
