@@ -62,6 +62,9 @@ jobs:
           pwd
           ls
 
+      # DEBUG
+      - uses: hmarr/debug-action@v2
+
       - name: Checkout changes
         if: ${{ env.PRNUMBER != '0' }}
         uses: actions/checkout@v2
