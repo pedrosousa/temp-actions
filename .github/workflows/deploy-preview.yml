@@ -18,7 +18,7 @@ jobs:
       run:
         shell: bash
     steps:
-    - name: Define HOME folder
+      - name: Define HOME folder
         run: |
           echo "HOME=$(echo $HOME)" >> $GITHUB_ENV
           echo $HOME
