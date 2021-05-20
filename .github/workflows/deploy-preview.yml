@@ -18,6 +18,11 @@ jobs:
       run:
         shell: bash
     steps:
+    - name: Define HOME folder
+        run: |
+          echo "HOME=$(echo $HOME)" >> $GITHUB_ENV
+          echo $HOME
+
       - name: Download artifact
         uses: dawidd6/action-download-artifact@v2
         with:
