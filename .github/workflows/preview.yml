@@ -10,8 +10,9 @@ on:
 jobs:
   preview:
     name: Check preview label
+    if: ${{ github.repository_owner == 'cloudflare' }}
     outputs:
-      result: ${{ steps.step1.outputs.result }}
+      result: ${{ steps.step1.outputs.result || 'false' }}
     runs-on: ubuntu-latest
     steps:
       - name: Set env variable to true when label is present
@@ -40,8 +41,9 @@ jobs:
 
   create-pr-artifact:
     name: Create PR artifact
-    runs-on: ubuntu-latest
     needs: [preview, changes]
+    if: ${{ needs.preview.outputs.result == 'true' }}
+    runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
