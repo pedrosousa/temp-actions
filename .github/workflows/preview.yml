@@ -10,7 +10,7 @@ on:
 jobs:
   preview:
     name: Check preview label
-    if: ${{ github.repository_owner == 'cloudflare' }}
+    if: ${{ github.repository_owner == 'pedrosousa' }}
     outputs:
       result: ${{ steps.step1.outputs.result || 'false' }}
     runs-on: ubuntu-latest
