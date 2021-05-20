@@ -131,9 +131,13 @@ jobs:
               popd
             fi
           done <$HOME/CHANGES
+          CF_ACCOUNT_ID=$PREVIEW_ACCOUNT_ID
+          # - Not sure this will define env var outside wrangler-action
+          echo "SUBDOMAIN=$(wrangler subdomain | xargs)" >> $GITHUB_ENV
         env:
           WRANGLER_VERSION: '1.13.0'
           ENVIRONMENT: preview
+          PREVIEW_ACCOUNT_ID: ${{ env.PREVIEW_ACCOUNT_ID }}
 
       # - name: Publish preview
       #   if: ${{ env.PRNUMBER != '0' }}
