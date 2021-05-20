@@ -51,7 +51,9 @@ jobs:
       #   run: unzip pr.zip
 
       - name: Get PR number
-        run: echo "PRNUMBER=$(cat ./NUMBER)" >> $GITHUB_ENV
+        run: |
+          echo "PRNUMBER=$(cat ./NUMBER)" >> $GITHUB_ENV
+          pwd
 
       - name: Checkout changes
         if: ${{ env.PRNUMBER != '0' }}
@@ -68,6 +70,7 @@ jobs:
       - name: Build updated docs
         if: ${{ env.PRNUMBER != '0' }}
         run: |
+          pwd
           while read tile; do
             echo "Building $tile..."
             if [ $tile == "developers.cloudflare.com" ]; then
@@ -83,7 +86,7 @@ jobs:
               echo npm run build
               popd
             fi
-          done <./CHANGES
+          done <$GITHUB_WORKSPACE/CHANGES
         env:
           WORKERS_ENV: development
           PREVIEW_ACCOUNT_ID: ${{ env.PREVIEW_ACCOUNT_ID }}
@@ -110,7 +113,7 @@ jobs:
                 echo wrangler publish -e "preview"
                 popd
               fi
-            done <./CHANGES
+            done <$GITHUB_WORKSPACE/CHANGES
           postCommands: |
             # Get subdomain used for previews
             # - Define env var so we don't need a local wrangler.toml file
