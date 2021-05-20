@@ -24,7 +24,7 @@ jobs:
           run_id: ${{github.event.workflow_run.id }}
           name: pr
           workflow: unused-but-mandatory-argument
-          path: ${{ github.workspace }}
+          path: ${{ env.HOME }}
 
       # source: 
       # https://securitylab.github.com/research/github-actions-preventing-pwn-requests/
@@ -53,7 +53,7 @@ jobs:
 
       - name: Get PR number
         run: |
-          echo "PRNUMBER=$(cat $GITHUB_WORKSPACE/NUMBER)" >> $GITHUB_ENV
+          echo "PRNUMBER=$(cat $HOME/NUMBER)" >> $GITHUB_ENV
           pwd
           ls
 
@@ -89,7 +89,7 @@ jobs:
               echo npm run build
               popd
             fi
-          done <$GITHUB_WORKSPACE/CHANGES
+          done <$HOME/CHANGES
         env:
           WORKERS_ENV: development
           PREVIEW_ACCOUNT_ID: ${{ env.PREVIEW_ACCOUNT_ID }}
@@ -118,7 +118,7 @@ jobs:
                 echo wrangler publish -e "preview"
                 popd
               fi
-            done <$GITHUB_WORKSPACE/CHANGES
+            done <$HOME/CHANGES
           postCommands: |
             # Get subdomain used for previews
             # - Define env var so we don't need a local wrangler.toml file
@@ -140,7 +140,7 @@ jobs:
             else
               MESSAGE="* ${MESSAGE}${BASE_URL}/${tile}\n"
             fi
-          done <./CHANGES
+          done <$HOME/CHANGES
           echo "BODY=$(echo $MESSAGE)" >> $GITHUB_ENV
         env:
           SUBDOMAIN: ${{ env.SUBDOMAIN }}
