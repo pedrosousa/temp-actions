@@ -1,0 +1,180 @@
+name: Deploy preview
+
+env:
+  PREVIEW_ACCOUNT_ID: 09e1897acd19314fc6df7d21108729b0
+
+on:
+  workflow_run:
+    workflows: 
+      - "Prepare preview"
+    types: 
+      - completed
+
+jobs:
+  on-success:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.repository_owner == 'cloudflare' }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Download artifact
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          repo: cloudflare/cloudflare-docs
+          run_id: ${{github.event.workflow_run.id }}
+          name: pr
+          workflow: unused-but-mandatory-argument
+
+      # source: 
+      # https://securitylab.github.com/research/github-actions-preventing-pwn-requests/
+      # - name: 'Download artifact'
+      #   uses: actions/github-script@v3.1.0
+      #   with:
+      #     script: |
+      #       var artifacts = await github.actions.listWorkflowRunArtifacts({
+      #          owner: context.repo.owner,
+      #          repo: context.repo.repo,
+      #          run_id: ${{github.event.workflow_run.id }},
+      #       });
+      #       var matchArtifact = artifacts.data.artifacts.filter((artifact) => {
+      #         return artifact.name == "pr"
+      #       })[0];
+      #       var download = await github.actions.downloadArtifact({
+      #          owner: context.repo.owner,
+      #          repo: context.repo.repo,
+      #          artifact_id: matchArtifact.id,
+      #          archive_format: 'zip',
+      #       });
+      #       var fs = require('fs');
+      #       fs.writeFileSync('${{github.workspace}}/pr.zip', Buffer.from(download.data));
+      # - name: Unzip artifact
+      #   run: unzip pr.zip
+
+      - name: Get PR number
+        run: echo "PRNUMBER=$(cat ./NUMBER)" >> $GITHUB_ENV
+
+      - name: Checkout changes
+        if: ${{ env.PRNUMBER != '0' }}
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
+
+      - name: Setup NodeJS
+        if: ${{ env.PRNUMBER != '0' }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: 14.2.0
+
+      - name: Build updated docs
+        if: ${{ env.PRNUMBER != '0' }}
+        run: |
+          while read tile; do
+            echo "Building $tile..."
+            if [ $tile == "developers.cloudflare.com" ]; then
+              echo pushd developers.cloudflare.com
+              echo npm install
+              echo npm run build
+              echo popd
+            else
+              echo pushd products/$tile
+              echo npm install
+              echo mkdir .docs
+              echo npm run ghactionsbootstrap
+              echo npm run build
+              echo popd
+            fi
+          done <./CHANGES
+        env:
+          WORKERS_ENV: development
+          PREVIEW_ACCOUNT_ID: ${{ env.PREVIEW_ACCOUNT_ID }}
+
+      - name: Publish preview
+        if: ${{ env.PRNUMBER != '0' }}
+        uses: cloudflare/wrangler-action@1.2.0
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          environment: "preview"
+          wranglerVersion: '1.13.0'
+          publish: false
+          preCommands: |
+            while read tile; do
+              echo "Deploying $tile..."
+              if [ $tile == "developers.cloudflare.com" ]; then
+                pushd developers.cloudflare.com
+                ../.github/setup_preview.sh ${{ env.PRNUMBER }} $PREVIEW_ACCOUNT_ID
+                echo wrangler publish -e "preview"
+                popd
+              else
+                pushd products/$tile
+                ../../.github/setup_preview.sh ${{ env.PRNUMBER }} $PREVIEW_ACCOUNT_ID
+                echo wrangler publish -e "preview"
+                popd
+              fi
+            done <./CHANGES
+          postCommands: |
+            # Get subdomain used for previews
+            # - Define env var so we don't need a local wrangler.toml file
+            CF_ACCOUNT_ID=$PREVIEW_ACCOUNT_ID
+            # - Not sure this will define env var outside wrangler-action
+            echo "SUBDOMAIN=$(wrangler subdomain | xargs)" >> $GITHUB_ENV
+        env:
+          PREVIEW_ACCOUNT_ID: ${{ env.PREVIEW_ACCOUNT_ID }}
+
+      - name: Build PR comment with URLs
+        if: ${{ env.PRNUMBER != '0' }}
+        run: |
+          BASE_URL=$(echo "https://pr${PR}.${SUBDOMAIN}")
+          MESSAGE="[Previewer] Preview available at the following URIs:\n"
+
+          while read tile; do
+            if [ $tile == "developers.cloudflare.com" ]; then
+              MESSAGE="* ${MESSAGE}${BASE_URL}\n"
+            else
+              MESSAGE="* ${MESSAGE}${BASE_URL}/${tile}\n"
+            fi
+          done <./CHANGES
+          echo "BODY=$(echo $MESSAGE)" >> $GITHUB_ENV
+        env:
+          SUBDOMAIN: ${{ env.SUBDOMAIN }}
+          PR: ${{ env.PRNUMBER }}
+
+      - name: Find comment about preview
+        if: ${{ env.PRNUMBER != '0' }}
+        uses: peter-evans/find-comment@v1
+        id: findcomment
+        with:
+          issue-number: ${{ env.PRNUMBER }}
+          body-includes: "[Previewer]"
+
+      # - name: Create or update comment
+      #   if: ${{ env.PRNUMBER != '0' }}
+      #   uses: peter-evans/create-or-update-comment@v1
+      #   with:
+      #     comment-id: ${{ steps.findcomment.outputs.comment-id }}
+      #     issue-number: ${{ env.PRNUMBER }}
+      #     body: $BODY
+      #     edit-mode: replace
+      #   env:
+      #     BODY: ${{ env.BODY }}
+
+
+
+      # - name: 'Comment on PR'
+      #   if: ${{ env.PRNUMBER != '0' }}
+      #   uses: actions/github-script@v3
+      #   with:
+      #     github-token: ${{ secrets.GITHUB_TOKEN }}
+      #     script: |
+      #       //var fs = require('fs');
+      #       //var issue_number = Number(fs.readFileSync('./NUMBER'));
+      #       await github.issues.createComment({
+      #         owner: context.repo.owner,
+      #         repo: context.repo.repo,
+      #         // issue_number: issue_number,
+      #         issue_number: '$PRNUMBER',
+      #         body: '$BODY'
+      #       });        
+      #   env:
+      #     BODY: ${{ env.BODY }}
+      #     PRNUMBER: ${{ env.PRNUMBER }}
