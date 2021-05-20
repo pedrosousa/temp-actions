@@ -24,6 +24,7 @@ jobs:
           run_id: ${{github.event.workflow_run.id }}
           name: pr
           workflow: unused-but-mandatory-argument
+          path: ${{ github.workspace }}
 
       # source: 
       # https://securitylab.github.com/research/github-actions-preventing-pwn-requests/
@@ -52,7 +53,7 @@ jobs:
 
       - name: Get PR number
         run: |
-          echo "PRNUMBER=$(cat ./NUMBER)" >> $GITHUB_ENV
+          echo "PRNUMBER=$(cat $GITHUB_WORKSPACE/NUMBER)" >> $GITHUB_ENV
           pwd
           ls
 
