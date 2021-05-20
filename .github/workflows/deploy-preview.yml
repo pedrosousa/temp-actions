@@ -18,10 +18,10 @@ jobs:
       run:
         shell: bash
     steps:
-      - name: Define HOME folder
+      - name: Define MYHOME folder
         run: |
-          echo "HOME=$(echo $HOME)" >> $GITHUB_ENV
-          echo $HOME
+          echo "MYHOME=$(echo $HOME)" >> $GITHUB_ENV
+          echo $MYHOME
 
       - name: Download artifact
         uses: dawidd6/action-download-artifact@v2
@@ -29,7 +29,7 @@ jobs:
           run_id: ${{github.event.workflow_run.id }}
           name: pr
           workflow: unused-but-mandatory-argument
-          path: ${{ env.HOME }}
+          path: ${{ env.MYHOME }}
 
       # source: 
       # https://securitylab.github.com/research/github-actions-preventing-pwn-requests/
