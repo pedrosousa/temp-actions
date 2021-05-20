@@ -67,6 +67,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           ref: ${{ github.event.workflow_run.head_branch }}
+          token: ${{ secrets.NEW_GH_TOKEN }}
 
       - name: Setup NodeJS
         if: ${{ env.PRNUMBER != '0' }}
