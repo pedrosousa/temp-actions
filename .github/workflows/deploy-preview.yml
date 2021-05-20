@@ -78,7 +78,7 @@ jobs:
         if: ${{ env.PRNUMBER != '0' }}
         run: |
           pwd
-          ls
+          ls -la
           while read tile; do
             echo "Building $tile..."
             if [ $tile == "developers.cloudflare.com" ]; then
@@ -110,11 +110,18 @@ jobs:
           while read tile; do 
             if [ $tile == "developers.cloudflare.com" ]; then
               pushd developers.cloudflare.com
+              ls -la
               ${GITHUB_WORKSPACE}/.github/setup_preview.sh ${{ env.PRNUMBER }} ${{ env.PREVIEW_ACCOUNT_ID }}
               echo wrangler publish -e $ENVIRONMENT
               popd
             else
               pushd products/$tile
+              ls -la
+              echo SEP workspace
+              ls -la ${GITHUB_WORKSPACE}
+              echo SEP .github
+              ls -la ${GITHUB_WORKSPACE}/.github
+              echo SEP
               ${GITHUB_WORKSPACE}/.github/setup_preview.sh ${{ env.PRNUMBER }} ${{ env.PREVIEW_ACCOUNT_ID }}
               echo wrangler publish -e $ENVIRONMENT
               popd
