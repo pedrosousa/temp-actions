@@ -54,6 +54,7 @@ jobs:
         run: |
           echo "PRNUMBER=$(cat ./NUMBER)" >> $GITHUB_ENV
           pwd
+          ls
 
       - name: Checkout changes
         if: ${{ env.PRNUMBER != '0' }}
@@ -71,6 +72,7 @@ jobs:
         if: ${{ env.PRNUMBER != '0' }}
         run: |
           pwd
+          ls
           while read tile; do
             echo "Building $tile..."
             if [ $tile == "developers.cloudflare.com" ]; then
@@ -100,6 +102,8 @@ jobs:
           wranglerVersion: '1.13.0'
           publish: false
           preCommands: |
+            pwd
+            ls
             while read tile; do
               echo "Deploying $tile..."
               if [ $tile == "developers.cloudflare.com" ]; then
