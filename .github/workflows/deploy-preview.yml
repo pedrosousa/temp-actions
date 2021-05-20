@@ -99,39 +99,63 @@ jobs:
           WORKERS_ENV: development
           PREVIEW_ACCOUNT_ID: ${{ env.PREVIEW_ACCOUNT_ID }}
 
-      - name: Publish preview
+      - name: Publish preview 2
         if: ${{ env.PRNUMBER != '0' }}
-        uses: cloudflare/wrangler-action@1.3.0
-        with:
-          apiToken: ${{ secrets.CF_API_TOKEN }}
-          environment: "preview"
-          wranglerVersion: '1.13.0'
-          publish: false
-          preCommands: |
-            pwd
-            ls
-            while read tile; do
-              echo "Deploying $tile..."
-              if [ $tile == "developers.cloudflare.com" ]; then
-                pushd developers.cloudflare.com
-                ../.github/setup_preview.sh ${{ env.PRNUMBER }} $PREVIEW_ACCOUNT_ID
-                echo wrangler publish -e "preview"
-                popd
-              else
-                pushd products/$tile
-                ../../.github/setup_preview.sh ${{ env.PRNUMBER }} $PREVIEW_ACCOUNT_ID
-                echo wrangler publish -e "preview"
-                popd
-              fi
-            done <$HOME/CHANGES
-          postCommands: |
-            # Get subdomain used for previews
-            # - Define env var so we don't need a local wrangler.toml file
-            CF_ACCOUNT_ID=$PREVIEW_ACCOUNT_ID
-            # - Not sure this will define env var outside wrangler-action
-            echo "SUBDOMAIN=$(wrangler subdomain | xargs)" >> $GITHUB_ENV
+        run: |
+          export WRANGLER_HOME="$HOME"
+          mkdir -p "$HOME/.wrangler"
+          chmod -R 770 "$HOME/.wrangler"
+          export CF_API_TOKEN=${{ secrets.CF_API_TOKEN }}
+          npm i "@cloudflare/wrangler@$WRANGLER_VERSION" -g
+          while read tile; do 
+            if [ $tile == "developers.cloudflare.com" ]; then
+              pushd developers.cloudflare.com
+              ../.github/setup_preview.sh ${{ env.PRNUMBER }} ${{ env.PREVIEW_ACCOUNT_ID }}
+              echo wrangler publish -e $ENVIRONMENT
+              popd
+            else
+              pushd products/$tile
+              ../../.github/setup_preview.sh ${{ env.PRNUMBER }} ${{ env.PREVIEW_ACCOUNT_ID }}
+              echo wrangler publish -e $ENVIRONMENT
+              popd
+            fi
+          done <$HOME/CHANGES
         env:
-          PREVIEW_ACCOUNT_ID: ${{ env.PREVIEW_ACCOUNT_ID }}
+          WRANGLER_VERSION: '1.13.0'
+          ENVIRONMENT: preview
+
+      # - name: Publish preview
+      #   if: ${{ env.PRNUMBER != '0' }}
+      #   uses: cloudflare/wrangler-action@1.3.0
+      #   with:
+      #     apiToken: ${{ secrets.CF_API_TOKEN }}
+      #     environment: "preview"
+      #     wranglerVersion: '1.13.0'
+      #     publish: false
+      #     preCommands: |
+      #       pwd
+      #       ls
+      #       while read tile; do 
+      #       if [ $tile == "developers.cloudflare.com" ]; then
+      #           pushd developers.cloudflare.com
+      #           ../.github/setup_preview.sh ${{ env.PRNUMBER }} $PREVIEW_ACCOUNT_ID
+      #           echo wrangler publish -e "preview"
+      #           popd
+      #         else
+      #           pushd products/$tile
+      #           ../../.github/setup_preview.sh ${{ env.PRNUMBER }} $PREVIEW_ACCOUNT_ID
+      #           echo wrangler publish -e "preview"
+      #           popd
+      #         fi
+      #       done <$HOME/CHANGES
+      #     postCommands: |
+      #       # Get subdomain used for previews
+      #       # - Define env var so we don't need a local wrangler.toml file
+      #       CF_ACCOUNT_ID=$PREVIEW_ACCOUNT_ID
+      #       # - Not sure this will define env var outside wrangler-action
+      #       echo "SUBDOMAIN=$(wrangler subdomain | xargs)" >> $GITHUB_ENV
+      #   env:
+      #     PREVIEW_ACCOUNT_ID: ${{ env.PREVIEW_ACCOUNT_ID }}
 
       - name: Build PR comment with URLs
         if: ${{ env.PRNUMBER != '0' }}
