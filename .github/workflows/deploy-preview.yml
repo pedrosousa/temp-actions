@@ -209,16 +209,14 @@ jobs:
           issue-number: ${{ env.PRNUMBER }}
           body-includes: "[Previewer]"
 
-      # - name: Create or update comment
-      #   if: ${{ env.PRNUMBER != '0' }}
-      #   uses: peter-evans/create-or-update-comment@v1
-      #   with:
-      #     comment-id: ${{ steps.findcomment.outputs.comment-id }}
-      #     issue-number: ${{ env.PRNUMBER }}
-      #     body: $BODY
-      #     edit-mode: replace
-      #   env:
-      #     BODY: ${{ env.BODY }}
+      - name: Create or update comment
+        if: ${{ env.PRNUMBER != '0' }}
+        uses: peter-evans/create-or-update-comment@v1
+        with:
+          comment-id: ${{ steps.findcomment.outputs.comment-id }}
+          issue-number: ${{ env.PRNUMBER }}
+          body: ${{ env.BODY }}
+          edit-mode: replace
 
 
 
