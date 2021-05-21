@@ -1,4 +1,5 @@
-# Cloudflare Web Application Firewall (WAF) docs
+# Cloudflare Web Application Firewall (WAF) documentation
+
 
 [View docs →](https://developers.cloudflare.com/waf)
 
