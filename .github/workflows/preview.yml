@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       rules: ${{ steps.filter.outputs.rules }}
-      firewall: ${{ steps.filter.outputs.firewall }}
+      waf: ${{ steps.filter.outputs.waf }}
     steps:
       - uses: actions/checkout@v2
       - uses: dorny/paths-filter@v2.4.2
@@ -36,8 +36,8 @@ jobs:
           filters: |
             rules:
               - 'products/rules/**'
-            firewall:
-              - 'products/firewall/**'
+            waf:
+              - 'products/waf/**'
 
   create-pr-artifact:
     name: Create PR artifact
@@ -61,9 +61,9 @@ jobs:
         if: ${{ needs.preview.outputs.result == 'true' && needs.changes.outputs.rules == 'true' }}
         run: echo 'rules' >> ./pr/CHANGES
 
-      - name: Firewall changed
-        if: ${{ needs.preview.outputs.result == 'true' && needs.changes.outputs.firewall == 'true' }}
-        run: echo 'firewall' >> ./pr/CHANGES
+      - name: WAF changed
+        if: ${{ needs.preview.outputs.result == 'true' && needs.changes.outputs.waf == 'true' }}
+        run: echo 'waf' >> ./pr/CHANGES
 
 # repeat for other products...
 

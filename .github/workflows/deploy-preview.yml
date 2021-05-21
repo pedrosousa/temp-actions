@@ -18,10 +18,10 @@ jobs:
       run:
         shell: bash
     steps:
-      - name: Define HOME folder
+      - name: Define MYHOME folder
         run: |
-          echo "HOME=$(echo $HOME)" >> $GITHUB_ENV
-          echo $HOME
+          echo "MYHOME=$(echo $HOME)" >> $GITHUB_ENV
+          echo $MYHOME
 
       - name: Download artifact
         uses: dawidd6/action-download-artifact@v2
@@ -29,7 +29,7 @@ jobs:
           run_id: ${{github.event.workflow_run.id }}
           name: pr
           workflow: unused-but-mandatory-argument
-          path: ${{ env.HOME }}
+          path: ${{ env.MYHOME }}
 
       # source: 
       # https://securitylab.github.com/research/github-actions-preventing-pwn-requests/
@@ -59,20 +59,32 @@ jobs:
       - name: Get PR number
         run: |
           echo "PRNUMBER=$(cat $HOME/NUMBER)" >> $GITHUB_ENV
-          pwd
-          ls
 
       - name: Checkout changes
         if: ${{ env.PRNUMBER != '0' }}
         uses: actions/checkout@v2
         with:
-          ref: ${{ github.event.workflow_run.head_branch }}
+          ref: ${{ github.event.workflow_run.head_sha }}
+          token: ${{ secrets.NEW_GH_TOKEN }}
 
       - name: Setup NodeJS
         if: ${{ env.PRNUMBER != '0' }}
         uses: actions/setup-node@v1
         with:
           node-version: 14.2.0
+
+      - name: Checkout docs engine
+        if: ${{ env.PRNUMBER != '0' }}
+        uses: actions/checkout@v2
+        with:
+          repository: 'cloudflare/cloudflare-docs-engine'
+          path: 'engine'
+
+      - name: Install docs engine
+        if: ${{ env.PRNUMBER != '0' }}
+        run: |
+          cd $GITHUB_WORKSPACE/engine
+          npm link
 
       - name: Build updated docs
         if: ${{ env.PRNUMBER != '0' }}
@@ -88,8 +100,8 @@ jobs:
               popd
             else
               pushd products/$tile
-              echo npm install
-              echo mkdir .docs
+              npm link cloudflare-docs-engine
+              mkdir .docs
               echo npm run ghactionsbootstrap
               echo npm run build
               popd
@@ -99,37 +111,42 @@ jobs:
           WORKERS_ENV: development
           PREVIEW_ACCOUNT_ID: ${{ env.PREVIEW_ACCOUNT_ID }}
 
-      - name: Publish preview 2
+      - name: Publish preview
         if: ${{ env.PRNUMBER != '0' }}
         run: |
           export WRANGLER_HOME="$HOME"
           mkdir -p "$HOME/.wrangler"
           chmod -R 770 "$HOME/.wrangler"
           export CF_API_TOKEN=${{ secrets.CF_API_TOKEN }}
-          npm i "@cloudflare/wrangler@$WRANGLER_VERSION" -g
+          npm i "@cloudflare/wrangler" -g
+          COPIED="false"
           while read tile; do 
             if [ $tile == "developers.cloudflare.com" ]; then
               pushd developers.cloudflare.com
-              ls -la
+              if [ $COPIED == "false" ]; then
+                cp wrangler.toml ${GITHUB_WORKSPACE}/
+                COPIED=true
+              fi
               ${GITHUB_WORKSPACE}/.github/setup_preview.sh ${{ env.PRNUMBER }} ${{ env.PREVIEW_ACCOUNT_ID }}
               echo wrangler publish -e $ENVIRONMENT
               popd
             else
               pushd products/$tile
-              ls -la
-              echo SEP workspace
-              ls -la ${GITHUB_WORKSPACE}
-              echo SEP .github
-              ls -la ${GITHUB_WORKSPACE}/.github
-              echo SEP
+              if [ $COPIED == "false" ]; then
+                cp wrangler.toml ${GITHUB_WORKSPACE}/
+                COPIED=true
+              fi
               ${GITHUB_WORKSPACE}/.github/setup_preview.sh ${{ env.PRNUMBER }} ${{ env.PREVIEW_ACCOUNT_ID }}
               echo wrangler publish -e $ENVIRONMENT
               popd
             fi
           done <$HOME/CHANGES
+          cd ${GITHUB_WORKSPACE}
+          echo "SUBDOMAIN=$(wrangler subdomain | iconv -c -f utf-8 -t ascii | xargs)" >> $GITHUB_ENV
         env:
-          WRANGLER_VERSION: '1.13.0'
           ENVIRONMENT: preview
+          CF_ACCOUNT_ID: ${{ env.PREVIEW_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
 
       # - name: Publish preview
       #   if: ${{ env.PRNUMBER != '0' }}
@@ -165,41 +182,42 @@ jobs:
       #     PREVIEW_ACCOUNT_ID: ${{ env.PREVIEW_ACCOUNT_ID }}
 
       - name: Build PR comment with URLs
+        id: build-comment
         if: ${{ env.PRNUMBER != '0' }}
         run: |
           BASE_URL=$(echo "https://pr${PR}.${SUBDOMAIN}")
-          MESSAGE="[Previewer] Preview available at the following URIs:\n"
+          # %0A is escaped newline: https://github.com/peter-evans/create-or-update-comment/issues/51
+          MESSAGE="[Previewer] Preview up to commit \`${SHA:0:7}\` available at the following URIs:%0A"
 
           while read tile; do
             if [ $tile == "developers.cloudflare.com" ]; then
-              MESSAGE="* ${MESSAGE}${BASE_URL}\n"
+              MESSAGE="${MESSAGE}- ${BASE_URL}%0A"
             else
-              MESSAGE="* ${MESSAGE}${BASE_URL}/${tile}\n"
+              MESSAGE="${MESSAGE}- ${BASE_URL}/${tile}%0A"
             fi
           done <$HOME/CHANGES
-          echo "BODY=$(echo $MESSAGE)" >> $GITHUB_ENV
+          echo ::set-output name=body::$MESSAGE
         env:
           SUBDOMAIN: ${{ env.SUBDOMAIN }}
           PR: ${{ env.PRNUMBER }}
+          SHA: ${{ github.event.workflow_run.head_sha }}
 
       - name: Find comment about preview
         if: ${{ env.PRNUMBER != '0' }}
         uses: peter-evans/find-comment@v1
-        id: findcomment
+        id: find-comment
         with:
           issue-number: ${{ env.PRNUMBER }}
           body-includes: "[Previewer]"
 
-      # - name: Create or update comment
-      #   if: ${{ env.PRNUMBER != '0' }}
-      #   uses: peter-evans/create-or-update-comment@v1
-      #   with:
-      #     comment-id: ${{ steps.findcomment.outputs.comment-id }}
-      #     issue-number: ${{ env.PRNUMBER }}
-      #     body: $BODY
-      #     edit-mode: replace
-      #   env:
-      #     BODY: ${{ env.BODY }}
+      - name: Create or update comment
+        if: ${{ env.PRNUMBER != '0' }}
+        uses: peter-evans/create-or-update-comment@v1
+        with:
+          comment-id: ${{ steps.find-comment.outputs.comment-id }}
+          issue-number: ${{ env.PRNUMBER }}
+          body: ${{ steps.build-comment.outputs.body }}
+          edit-mode: replace
 
 
 
