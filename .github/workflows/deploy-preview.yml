@@ -65,7 +65,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
-          token: ${{ secrets.NEW_GH_TOKEN }}
+#          token: ${{ secrets.NEW_GH_TOKEN }}
 
       - name: Setup NodeJS
         if: ${{ env.PRNUMBER != '0' }}
@@ -89,21 +89,19 @@ jobs:
       - name: Build updated docs
         if: ${{ env.PRNUMBER != '0' }}
         run: |
-          pwd
-          ls -la
           while read tile; do
             echo "Building $tile..."
             if [ $tile == "developers.cloudflare.com" ]; then
               pushd developers.cloudflare.com
-              echo npm install
-              echo npm run build
+              npm install
+              npm run build
               popd
             else
               pushd products/$tile
               npm link cloudflare-docs-engine
               mkdir .docs
-              echo npm run ghactionsbootstrap
-              echo npm run build
+              npm run ghactionsbootstrap
+              npm run build
               popd
             fi
           done <$HOME/CHANGES
@@ -118,7 +116,7 @@ jobs:
           mkdir -p "$HOME/.wrangler"
           chmod -R 770 "$HOME/.wrangler"
           export CF_API_TOKEN=${{ secrets.CF_API_TOKEN }}
-          npm i "@cloudflare/wrangler" -g
+          npm install "@cloudflare/wrangler" -g
           COPIED="false"
           while read tile; do 
             if [ $tile == "developers.cloudflare.com" ]; then
@@ -127,8 +125,8 @@ jobs:
                 cp wrangler.toml ${GITHUB_WORKSPACE}/
                 COPIED=true
               fi
-              ${GITHUB_WORKSPACE}/.github/setup_preview.sh ${{ env.PRNUMBER }} ${{ env.PREVIEW_ACCOUNT_ID }}
-              echo wrangler publish -e $ENVIRONMENT
+              ${GITHUB_WORKSPACE}/.github/setup_preview.sh ${{ env.PRNUMBER }} $tile ${{ env.PREVIEW_ACCOUNT_ID }}
+              wrangler publish -e $ENVIRONMENT
               popd
             else
               pushd products/$tile
@@ -136,12 +134,13 @@ jobs:
                 cp wrangler.toml ${GITHUB_WORKSPACE}/
                 COPIED=true
               fi
-              ${GITHUB_WORKSPACE}/.github/setup_preview.sh ${{ env.PRNUMBER }} ${{ env.PREVIEW_ACCOUNT_ID }}
-              echo wrangler publish -e $ENVIRONMENT
+              ${GITHUB_WORKSPACE}/.github/setup_preview.sh ${{ env.PRNUMBER }} $tile ${{ env.PREVIEW_ACCOUNT_ID }}
+              wrangler publish -e $ENVIRONMENT
               popd
             fi
           done <$HOME/CHANGES
           cd ${GITHUB_WORKSPACE}
+          # iconv removes emoji in output; xargs does a trim
           echo "SUBDOMAIN=$(wrangler subdomain | iconv -c -f utf-8 -t ascii | xargs)" >> $GITHUB_ENV
         env:
           ENVIRONMENT: preview
@@ -185,15 +184,18 @@ jobs:
         id: build-comment
         if: ${{ env.PRNUMBER != '0' }}
         run: |
-          BASE_URL=$(echo "https://pr${PR}.${SUBDOMAIN}")
-          # %0A is escaped newline: https://github.com/peter-evans/create-or-update-comment/issues/51
+          BASE_URL=$(echo "https://pr${PR}-PRODUCTNAME.${SUBDOMAIN}")
+          # %0A is escaped newline:
+          # https://github.com/peter-evans/create-or-update-comment/issues/51
           MESSAGE="[Previewer] Preview up to commit \`${SHA:0:7}\` available at the following URIs:%0A"
 
           while read tile; do
             if [ $tile == "developers.cloudflare.com" ]; then
-              MESSAGE="${MESSAGE}- ${BASE_URL}%0A"
+              CURR_URL=${BASE_URL//PRODUCTNAME/developers-cloudflare-com}
+              MESSAGE="${MESSAGE}- ${CURR_URL}%0A"
             else
-              MESSAGE="${MESSAGE}- ${BASE_URL}/${tile}%0A"
+              CURR_URL=${BASE_URL//PRODUCTNAME/$tile}
+              MESSAGE="${MESSAGE}- ${CURR_URL}/${tile}%0A"
             fi
           done <$HOME/CHANGES
           echo ::set-output name=body::$MESSAGE
