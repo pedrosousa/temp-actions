@@ -125,7 +125,7 @@ jobs:
                 cp wrangler.toml ${GITHUB_WORKSPACE}/
                 COPIED=true
               fi
-              ${GITHUB_WORKSPACE}/.github/setup_preview.sh ${{ env.PRNUMBER }} ${{ env.PREVIEW_ACCOUNT_ID }}
+              ${GITHUB_WORKSPACE}/.github/setup_preview.sh ${{ env.PRNUMBER }} $tile ${{ env.PREVIEW_ACCOUNT_ID }}
               wrangler publish -e $ENVIRONMENT
               popd
             else
@@ -134,7 +134,7 @@ jobs:
                 cp wrangler.toml ${GITHUB_WORKSPACE}/
                 COPIED=true
               fi
-              ${GITHUB_WORKSPACE}/.github/setup_preview.sh ${{ env.PRNUMBER }} ${{ env.PREVIEW_ACCOUNT_ID }}
+              ${GITHUB_WORKSPACE}/.github/setup_preview.sh ${{ env.PRNUMBER }} $tile ${{ env.PREVIEW_ACCOUNT_ID }}
               wrangler publish -e $ENVIRONMENT
               popd
             fi
@@ -184,16 +184,18 @@ jobs:
         id: build-comment
         if: ${{ env.PRNUMBER != '0' }}
         run: |
-          BASE_URL=$(echo "https://pr${PR}.${SUBDOMAIN}")
+          BASE_URL=$(echo "https://pr${PR}-PRODUCTNAME.${SUBDOMAIN}")
           # %0A is escaped newline:
           # https://github.com/peter-evans/create-or-update-comment/issues/51
           MESSAGE="[Previewer] Preview up to commit \`${SHA:0:7}\` available at the following URIs:%0A"
 
           while read tile; do
             if [ $tile == "developers.cloudflare.com" ]; then
-              MESSAGE="${MESSAGE}- ${BASE_URL}%0A"
+              CURR_URL=${BASE_URL//PRODUCTNAME/developers-cloudflare-com}
+              MESSAGE="${MESSAGE}- ${CURR_URL}%0A"
             else
-              MESSAGE="${MESSAGE}- ${BASE_URL}/${tile}%0A"
+              CURR_URL=${BASE_URL//PRODUCTNAME/$tile}
+              MESSAGE="${MESSAGE}- ${CURR_URL}/${tile}%0A"
             fi
           done <$HOME/CHANGES
           echo ::set-output name=body::$MESSAGE
