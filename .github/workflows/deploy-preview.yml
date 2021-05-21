@@ -198,7 +198,6 @@ jobs:
               MESSAGE="${MESSAGE}- ${BASE_URL}/${tile}%0A"
             fi
           done <$HOME/CHANGES
-          echo "MYBODY=$(echo $MESSAGE)" >> $GITHUB_ENV
           echo ::set-output name=body::$MESSAGE
         env:
           SUBDOMAIN: ${{ env.SUBDOMAIN }}
