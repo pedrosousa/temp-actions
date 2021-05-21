@@ -22,12 +22,14 @@ fi
 
 echo Adding preview settings to wrangler.toml file
 
+pr=$1
 # Replace .'s in tile/folder name with -'s to handle 'developers.cloudflare.com' edge case
 tile=${2//./-}
+account=$3
 
 cat $preview_settings_path/preview_settings.toml >> wrangler.toml
-sed "s#\[PRNUMBER\]#${1}-${tile}#" -i wrangler.toml
-sed "s#\[PREVIEWACCOUNTID\]#${2}#" -i wrangler.toml          
+sed "s#\[PRNUMBER\]#${pr}-${tile}#" -i wrangler.toml
+sed "s#\[PREVIEWACCOUNTID\]#${account}#" -i wrangler.toml          
 
 echo Updated wrangler.toml file:
 cat wrangler.toml
