@@ -115,28 +115,30 @@ jobs:
           chmod -R 770 "$HOME/.wrangler"
           export CF_API_TOKEN=${{ secrets.CF_API_TOKEN }}
           npm i "@cloudflare/wrangler@$WRANGLER_VERSION" -g
+          COPIED="false"
           while read tile; do 
             if [ $tile == "developers.cloudflare.com" ]; then
               pushd developers.cloudflare.com
-              ls -la
+              if [ $COPIED == "false" ]; then
+                cp wrangler.toml ${GITHUB_WORKSPACE}/
+                COPIED=true
+              fi
               ${GITHUB_WORKSPACE}/.github/setup_preview.sh ${{ env.PRNUMBER }} ${{ env.PREVIEW_ACCOUNT_ID }}
               echo wrangler publish -e $ENVIRONMENT
               popd
             else
               pushd products/$tile
-              ls -la
-              echo SEP workspace
-              ls -la ${GITHUB_WORKSPACE}
-              echo SEP .github
-              ls -la ${GITHUB_WORKSPACE}/.github
-              echo SEP
+              if [ $COPIED == "false" ]; then
+                cp wrangler.toml ${GITHUB_WORKSPACE}/
+                COPIED=true
+              fi
               ${GITHUB_WORKSPACE}/.github/setup_preview.sh ${{ env.PRNUMBER }} ${{ env.PREVIEW_ACCOUNT_ID }}
               echo wrangler publish -e $ENVIRONMENT
               popd
             fi
           done <$HOME/CHANGES
           CF_ACCOUNT_ID=$PREVIEW_ACCOUNT_ID
-          # - Not sure this will define env var outside wrangler-action
+          cd ${GITHUB_WORKSPACE}
           echo "SUBDOMAIN=$(wrangler subdomain | xargs)" >> $GITHUB_ENV
         env:
           WRANGLER_VERSION: '1.13.0'
