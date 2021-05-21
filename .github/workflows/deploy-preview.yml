@@ -62,9 +62,6 @@ jobs:
           pwd
           ls
 
-      # DEBUG
-      - uses: hmarr/debug-action@v2
-
       - name: Checkout changes
         if: ${{ env.PRNUMBER != '0' }}
         uses: actions/checkout@v2
@@ -78,6 +75,12 @@ jobs:
         with:
           node-version: 14.2.0
 
+      - name: Install docs engine
+        if: ${{ env.PRNUMBER != '0' }}
+        run: |
+          npm install github:cloudflare/cloudflare-docs-engine -g
+          npm link
+
       - name: Build updated docs
         if: ${{ env.PRNUMBER != '0' }}
         run: |
@@ -87,15 +90,16 @@ jobs:
             echo "Building $tile..."
             if [ $tile == "developers.cloudflare.com" ]; then
               pushd developers.cloudflare.com
-              echo npm install
-              echo npm run build
+              npm install
+              npm run build
               popd
             else
               pushd products/$tile
-              echo npm install
-              echo mkdir .docs
-              echo npm run ghactionsbootstrap
-              echo npm run build
+              npm link cloudflare-docs-engine
+              # npm install
+              mkdir .docs
+              npm run ghactionsbootstrap
+              npm run build
               popd
             fi
           done <$HOME/CHANGES
