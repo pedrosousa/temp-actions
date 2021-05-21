@@ -75,12 +75,17 @@ jobs:
         with:
           node-version: 14.2.0
 
+      - name: Checkout docs engine
+        if: ${{ env.PRNUMBER != '0' }}
+        uses: actions/checkout@v2
+        with:
+          repository: 'cloudflare/cloudflare-docs-engine'
+          path: 'engine'
+
       - name: Install docs engine
         if: ${{ env.PRNUMBER != '0' }}
-        working-directory: $ {{ env.HOME }}
         run: |
-          /usr/bin/git clone --depth 1 https://github.com/cloudflare/cloudflare-docs-engine.git --branch master --single-branch engine
-          cd engine
+          cd $GITHUB_WORKSPACE/engine
           npm link
 
       - name: Build updated docs
