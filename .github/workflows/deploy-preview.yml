@@ -77,10 +77,10 @@ jobs:
 
       - name: Install docs engine
         if: ${{ env.PRNUMBER != '0' }}
+        working-directory: $ {{ env.HOME }}
         run: |
-          mkdir $HOME/engine
-          cd $HOME/engine
-          npm install github:cloudflare/cloudflare-docs-engine
+          git clone --depth 1 https://github.com/cloudflare/cloudflare-docs-engine.git --branch master --single-branch engine
+          cd engine
           npm link
 
       - name: Build updated docs
