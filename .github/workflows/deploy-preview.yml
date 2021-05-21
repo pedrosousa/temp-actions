@@ -120,7 +120,7 @@ jobs:
           mkdir -p "$HOME/.wrangler"
           chmod -R 770 "$HOME/.wrangler"
           export CF_API_TOKEN=${{ secrets.CF_API_TOKEN }}
-          npm i "@cloudflare/wrangler@$WRANGLER_VERSION" -g
+          npm i "@cloudflare/wrangler" -g
           COPIED="false"
           while read tile; do 
             if [ $tile == "developers.cloudflare.com" ]; then
@@ -146,7 +146,6 @@ jobs:
           cd ${GITHUB_WORKSPACE}
           echo "SUBDOMAIN=$(wrangler subdomain | xargs)" >> $GITHUB_ENV
         env:
-          WRANGLER_VERSION: '1.13.0'
           ENVIRONMENT: preview
           CF_ACCOUNT_ID: ${{ env.PREVIEW_ACCOUNT_ID }}
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
