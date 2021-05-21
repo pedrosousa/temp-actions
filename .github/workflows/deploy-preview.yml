@@ -79,7 +79,7 @@ jobs:
         if: ${{ env.PRNUMBER != '0' }}
         working-directory: $ {{ env.HOME }}
         run: |
-          git clone --depth 1 https://github.com/cloudflare/cloudflare-docs-engine.git --branch master --single-branch engine
+          /usr/bin/git clone --depth 1 https://github.com/cloudflare/cloudflare-docs-engine.git --branch master --single-branch engine
           cd engine
           npm link
 
