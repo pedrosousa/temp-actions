@@ -78,7 +78,9 @@ jobs:
       - name: Install docs engine
         if: ${{ env.PRNUMBER != '0' }}
         run: |
-          npm install github:cloudflare/cloudflare-docs-engine -g
+          mkdir $HOME/engine
+          cd $HOME/engine
+          npm install github:cloudflare/cloudflare-docs-engine
           npm link
 
       - name: Build updated docs
