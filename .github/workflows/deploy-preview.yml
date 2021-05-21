@@ -59,8 +59,6 @@ jobs:
       - name: Get PR number
         run: |
           echo "PRNUMBER=$(cat $HOME/NUMBER)" >> $GITHUB_ENV
-          pwd
-          ls
 
       - name: Checkout changes
         if: ${{ env.PRNUMBER != '0' }}
@@ -113,7 +111,7 @@ jobs:
           WORKERS_ENV: development
           PREVIEW_ACCOUNT_ID: ${{ env.PREVIEW_ACCOUNT_ID }}
 
-      - name: Publish preview 2
+      - name: Publish preview
         if: ${{ env.PRNUMBER != '0' }}
         run: |
           export WRANGLER_HOME="$HOME"
@@ -189,7 +187,7 @@ jobs:
         run: |
           BASE_URL=$(echo "https://pr${PR}.${SUBDOMAIN}")
           # %0A is escaped newline: https://github.com/peter-evans/create-or-update-comment/issues/51
-          MESSAGE="[Previewer] Preview available at the following URIs:%0A"
+          MESSAGE="[Previewer] Preview up to \\\`${SHA:0:7}\\\` available at the following URIs:%0A"
 
           while read tile; do
             if [ $tile == "developers.cloudflare.com" ]; then
@@ -202,11 +200,12 @@ jobs:
         env:
           SUBDOMAIN: ${{ env.SUBDOMAIN }}
           PR: ${{ env.PRNUMBER }}
+          SHA: ${{ github.event.workflow_run.head_sha }}
 
       - name: Find comment about preview
         if: ${{ env.PRNUMBER != '0' }}
         uses: peter-evans/find-comment@v1
-        id: findcomment
+        id: find-comment
         with:
           issue-number: ${{ env.PRNUMBER }}
           body-includes: "[Previewer]"
@@ -215,7 +214,7 @@ jobs:
         if: ${{ env.PRNUMBER != '0' }}
         uses: peter-evans/create-or-update-comment@v1
         with:
-          comment-id: ${{ steps.findcomment.outputs.comment-id }}
+          comment-id: ${{ steps.find-comment.outputs.comment-id }}
           issue-number: ${{ env.PRNUMBER }}
           body: ${{ steps.build-comment.outputs.body }}
           edit-mode: replace
