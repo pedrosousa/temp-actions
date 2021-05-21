@@ -90,16 +90,15 @@ jobs:
             echo "Building $tile..."
             if [ $tile == "developers.cloudflare.com" ]; then
               pushd developers.cloudflare.com
-              npm install
-              npm run build
+              echo npm install
+              echo npm run build
               popd
             else
               pushd products/$tile
               npm link cloudflare-docs-engine
-              # npm install
               mkdir .docs
-              npm run ghactionsbootstrap
-              npm run build
+              echo npm run ghactionsbootstrap
+              echo npm run build
               popd
             fi
           done <$HOME/CHANGES
