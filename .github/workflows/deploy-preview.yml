@@ -144,7 +144,7 @@ jobs:
             fi
           done <$HOME/CHANGES
           cd ${GITHUB_WORKSPACE}
-          echo "SUBDOMAIN=$(wrangler subdomain | xargs)" >> $GITHUB_ENV
+          echo "SUBDOMAIN=$(wrangler subdomain | iconv -c -f utf-8 -t ascii | xargs)" >> $GITHUB_ENV
         env:
           ENVIRONMENT: preview
           CF_ACCOUNT_ID: ${{ env.PREVIEW_ACCOUNT_ID }}
