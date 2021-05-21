@@ -187,13 +187,13 @@ jobs:
         if: ${{ env.PRNUMBER != '0' }}
         run: |
           BASE_URL=$(echo "https://pr${PR}.${SUBDOMAIN}")
-          MESSAGE="[Previewer] Preview available at the following URIs:\n"
+          MESSAGE="[Previewer] Preview available at the following URIs:"$'\n'
 
           while read tile; do
             if [ $tile == "developers.cloudflare.com" ]; then
-              MESSAGE="* ${MESSAGE}${BASE_URL}\n"
+              MESSAGE="${MESSAGE}- ${BASE_URL}"$'\n'
             else
-              MESSAGE="* ${MESSAGE}${BASE_URL}/${tile}\n"
+              MESSAGE="${MESSAGE}- ${BASE_URL}/${tile}"$'\n'
             fi
           done <$HOME/CHANGES
           echo "BODY=$(echo $MESSAGE)" >> $GITHUB_ENV
