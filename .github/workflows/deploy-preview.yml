@@ -187,7 +187,7 @@ jobs:
         run: |
           BASE_URL=$(echo "https://pr${PR}.${SUBDOMAIN}")
           # %0A is escaped newline: https://github.com/peter-evans/create-or-update-comment/issues/51
-          MESSAGE="[Previewer] Preview up to \\\`${SHA:0:7}\\\` available at the following URIs:%0A"
+          MESSAGE="[Previewer] Preview up to \`${SHA:0:7}\` available at the following URIs:%0A"
 
           while read tile; do
             if [ $tile == "developers.cloudflare.com" ]; then
