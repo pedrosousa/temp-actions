@@ -46,6 +46,7 @@ These Phases exist both at the account level and at the zone level. Considering 
 ## Deploying rulesets to Phases
 
 You can **deploy** the Managed Rulesets provided by WAF to the following Phases:
+
 * `http_request_firewall_managed` Phase at the **account** level (the Phase `kind` is `root`)
 * `http_request_firewall_managed` Phase at the **zone** level (the Phase `kind` is `zone`)
 
